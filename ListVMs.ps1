@@ -1,59 +1,56 @@
-#requires -version 3.0
+#Requires -Version 3.0
 <#
 
     .SYNOPSIS
-        List all VM on hostIP host
+        report a subset of all VMs properties on hostIP host(s) and export them to html and/or Excel.
 
     .DESCRIPTION
-        Retrieves a list of virtual machines from an hostIP host or vCenter Server, extracting a subset of 
-        vm properties values returned by Get-View. The list is converted to HTML and written to disk. 
-        The script automatically displays the report by invoking the default browser.
+        Retrieves a list of virtual machines from hostIP hosts or vCenter Server, extracting a subset of 
+        vm properties values returned by Get-View. Hosts names(IPs) and credentials are saved in a XMl file ( config.xml for this script). 
+        The script saves reports to disk and automatically displays the reports converted to HTML by invoking the default browser.
+        Reports are exported to Excel using Import-Excel Modules from https://github.com/dfinke/ImportExcel.
+        You can install this Module from PowerShell Gallery : https://www.powershellgallery.com/packages/ImportExcel/5.3.4
 
     .USAGE 
 
-        .\listvms <vcenter or host ip>:[Manadatory] <user>:[Manadatory] <password>:[Manadatory] <sortBy>:[Optional]
-
-    .PARAMETER hostIP
-        vcenter or host ip:[Manadatory]
-    
-    .PARAMETER user
-        user login: [Manadatory] 
-    
-    .PARAMETER pass
-        password : user password [Manadatory] 
+        .\listvms <sortBy>:[Optional] <exportTo>:[optional] 
     
     .PARAMETER sortBY
         sort result : [optional]
         sort result by -ramalloc -ramhost -os 
+    .PARAMETER exportTo
+        export result : [optional]
+        export result to -excel -html (default is both)
 
     .EXAMPLE
-        .\listVMs 172.17.10.100 root mypassword ramalloc  
+        .\listAllVMs 
+        .\listAllVMs -exportTo excel -os  
     .NOTES
         Author: Arnaud Mutana
-        Last Updated: SEPTEMBER 2018
-        Version: 1
+        Last Updated: OCTOBER 2018
+        Version: 2
   
     .Requires :
-    Veeam Backup & Replication v9.5 Update 3 (full or console install)
     VMware Infrastructure
-
+    ImportExcel Modules
 #> 
- 
-#Command line parameters
+# commandline parameters
 [CmdletBinding()]
 Param(
-    [Parameter(Mandatory = $true, Position = 1)]
-    [string]$hostIP,
+    [Parameter(Mandatory = $false, Position = 1)]
+    [string]$sortBy,
     [Parameter(Mandatory = $false, Position = 2)]
-    [string]$user,
-
-    [Parameter(Mandatory = $false, Position = 3)]
-    [string]$pass,
-
-    [Parameter(Mandatory = $false, Position = 4)]
-    [string]$sortBy
- 
+    [string]$exportTo
 )
+
+# Load required Snapins and Modules
+if ($null -eq (Get-PSSnapin -Name VeeamPSSNapin -ErrorAction SilentlyContinue)) {
+    Add-PSSnapin VeeamPSSNapin
+}
+if ($null -eq (Get-Module -Name Import -ErrorAction SilentlyContinue)) {
+    Import-Module "$PSScriptRoot\ImportExcel"
+}
+
 
 #Populate PSObject with the required vm properties 
 function vmProperties {
@@ -184,43 +181,65 @@ function header {
     return [string] $style
 }
 
+# XML file parse
+[xml]$XmlDoc = Get-Content "$PSScriptRoot\Config.xml"
+$listOfESX = $XmlDoc.Config.ESX
+
+
 #############################
 ### Script entry point ###
-#############################
-#Path to html report
-$repPath = (Get-ChildItem  env:userprofile).value + "\desktop\{0}.htm" -f $hostIP
- 
-#Report Title
-$title = "<h2>VMs hosted on $hostIP</h2>"
- 
-#Sort by
-if ($sortBy -eq "") {$sortBy = "Name"; $desc = $False} 
-elseif ($sortBy.Equals("ramalloc")) {$sortBy = "RAM Alloc"; $desc = $True} 
-elseif ($sortBy.Equals("ramhost")) {$sortBy = "RAM Host"; $desc = $True} 
-elseif ($sortBy.Equals("os")) {$sortBy = "OS"; $desc = $False}
- 
-Try {
-    #Drop any previously established connections
-    Disconnect-VIServer -Confirm:$False -ErrorAction SilentlyContinue
- 
-    #Connect to vCenter or hostIP
-    if (($user -eq "") -or ($pass -eq "")) 
-    {Connect-VIServer $hostIP -ErrorAction Stop}
-    else 
-    {Connect-VIServer $hostIP -User $user -Password $pass -ErrorAction Stop}
- 
-    #Get a VirtualMachine view of all vms
-    $vmView = Get-View -viewtype VirtualMachine
- 
-    #Iterate through the view object, write the set of vm properties to a PSObject and convert the whole lot to HTML
-    (vmProperties -view $vmView) | Sort-Object -Property @{Expression = $sortBy; Descending = $desc} | ConvertTo-Html -Head $(header) -PreContent $title | Set-Content -Path $repPath -ErrorAction Stop
- 
-    #Disconnect from vCenter or hostIP
-    Disconnect-VIServer -Confirm:$False -Server $hostIP -ErrorAction Stop
-    #Load report in default browser
-    Invoke-Expression "cmd.exe /C start $repPath"
+#############################   
+foreach ($ESX in $listOfESX) {
+    $hostIP = $ESX.HostIP.ip
+    $user = $ESX.User.user
+    $pass = $ESX.password.pass
 
-}
-Catch {
-    Write-Host $_.Exception.Message
+    #Path to html report
+    $repPath = (Get-ChildItem  env:userprofile).value + "\desktop\{0}.htm" -f $hostIP
+    $excelPath = (Get-ChildItem  env:userprofile).value + "\desktop\{0}.xlsx" -f $hostIP
+    
+    #Report Title
+    $title = "<h2>VMs hosted on $hostIP</h2>"
+    
+    #Sort by
+    if ($sortBy -eq "") {$sortBy = "Name"; $desc = $False} 
+    elseif ($sortBy.Equals("ramalloc")) {$sortBy = "RAM Alloc"; $desc = $True} 
+    elseif ($sortBy.Equals("ramhost")) {$sortBy = "RAM Host"; $desc = $True} 
+    elseif ($sortBy.Equals("os")) {$sortBy = "OS"; $desc = $False}
+    
+    Try {
+        #Drop any previously established connections
+        Disconnect-VIServer -Confirm:$False -ErrorAction SilentlyContinue
+    
+        #Connect to vCenter or hostIP
+        if (($user -eq "") -or ($pass -eq "")) 
+        {Connect-VIServer $hostIP -ErrorAction Stop}
+        else 
+        {Connect-VIServer $hostIP -User $user -Password $pass -ErrorAction Stop}
+    
+        #Get a VirtualMachine view of all vms
+        $vmView = Get-View -viewtype VirtualMachine
+
+        #export to
+        if ($exportTo -eq "excel") {
+            #Iterate through the view object, write the set of vm properties to a PSObject and convert the whole lot to Excel workbook
+            (vmProperties -view $vmView) | Sort-Object -Property @{Expression = $sortBy; Descending = $desc} | Export-Excel -Path $excelPath
+        }
+        elseif ($exportTo -eq "html") {
+            #Iterate through the view object, write the set of vm properties to a PSObject and convert the whole lot to Excel workbook
+            (vmProperties -view $vmView) | Sort-Object -Property @{Expression = $sortBy; Descending = $desc} | ConvertTo-Html -Head $(header) -PreContent $title | Set-Content -Path $repPath -ErrorAction Stop
+        }
+        else {
+            (vmProperties -view $vmView) | Sort-Object -Property @{Expression = $sortBy; Descending = $desc} | ConvertTo-Html -Head $(header) -PreContent $title | Set-Content -Path $repPath -ErrorAction Stop
+            (vmProperties -view $vmView) | Sort-Object -Property @{Expression = $sortBy; Descending = $desc} | ConvertTo-Html -Head $(header) -PreContent $title | Set-Content -Path $repPath -ErrorAction Stop
+        }
+        #Disconnect from vCenter or hostIP
+        Disconnect-VIServer -Confirm:$False -Server $hostIP -ErrorAction Stop
+        #Load report in default browser
+        Invoke-Expression "cmd.exe /C start $repPath"
+
+    }
+    Catch {
+        Write-Host $_.Exception.Message
+    }
 }
