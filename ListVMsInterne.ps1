@@ -28,7 +28,7 @@
     .NOTES
         Author: Arnaud Mutana
         Last Updated: OCTOBER 2018
-        Version: 2.1
+        Version: 2
   
     .Requires :
     VMware Infrastructure
@@ -69,8 +69,7 @@ function vmProperties {
         # Net Info
         $ipAdresses = $vm.Guest.IpAddress
         $macAdresses = $vm.Guest.Net.MacAddress
-        #Datastores info
-        $datastoresNames = $vm.Config.DataStoreUrl.Name
+        
         #Check for multi-homed vms
         $ips=""
         foreach ($ip in $ipAdresses){
@@ -79,10 +78,6 @@ function vmProperties {
         $macs=""
         foreach($mac in $macAdresses){
             $macs += $mac + "`n"
-        }
-        $datastores=""
-        foreach($datastore in $datastoresNames){
-            $datastores += $datastore + " "
         }
 
         #Disk Info 
@@ -116,8 +111,7 @@ function vmProperties {
             "Free"      = $freeSpace
             "NICS"      = $vm.Summary.config.NumEthernetCards
             "IPs"       = $ips
-            "MACs"      = $macs 
-            "Datastore" = $datastores 
+            "MACs"      = $macs  
             "vmTools"   = $vmtools
             "State"     = $state
             "UUID"      = $vm.Summary.config.Uuid
