@@ -43,9 +43,10 @@ Param(
     [string]$exportTo
 )
 
-# Load required Snapins and Modules
-if ($null -eq (Get-PSSnapin -Name VeeamPSSNapin -ErrorAction SilentlyContinue)) {
-    Add-PSSnapin VeeamPSSNapin
+# Load required Modules
+if ($null -eq (Get-Module -Name Import -ErrorAction SilentlyContinue)) {
+    Import-Module "$PSScriptRoot\VMware.PowerCli"
+    Write-Host "Module VMware.PowerCLI does not exist - installation du module powerCLI"
 }
 if ($null -eq (Get-Module -Name Import -ErrorAction SilentlyContinue)) {
     Import-Module "$PSScriptRoot\ImportExcel"
