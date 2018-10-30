@@ -1,6 +1,6 @@
 # ListVms
 
-ListVMs is a powershell script that retrieves a list of virtual machines from hostIP hosts or vCenter Server, extracting a subset of vm properties values returned by Get-View.
+ListVMs is a powershell script that retrieves a list of virtual machines from hostIP hosts or vCenter Server using PowerCli, extracting a subset of vm properties values returned by Get-View.
 Hosts names(IPs) and credentials are saved in a XMl file ( config.xml for this script). 
 The script saves reports to disk and automatically displays the reports converted to HTML by invoking the default browser.
 Reports are exported to Excel using Import-Excel Modules from https://github.com/dfinke/ImportExcel.
