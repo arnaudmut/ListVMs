@@ -1,0 +1,8 @@
+<!-- do not forget to replace theses datas with your real ones -->
+ <config>
+    <ESX>
+        <HostIP ip="123.453.789.000"/> 
+        <User user ="root"/>
+        <password pass ="0chy8cZdC76IMqj5a9Xp"/>
+    </ESX>
+</config>
