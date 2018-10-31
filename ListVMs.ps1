@@ -5,10 +5,10 @@
         report a subset of all VMs properties on hostIP host(s) and export them to html and/or Excel.
 
     .DESCRIPTION
-        Retrieves a list of virtual machines from hostIP hosts or vCenter Server, extracting a subset of 
-        vm properties values returned by Get-View. Hosts names(IPs) and credentials are saved in a XMl file ( config.xml for this script). 
+        ListVMs is a powershell script that retrieves a list of virtual machines from hostIP hosts or vCenter Server using PowerCli,
+        extracting a subset of vm properties values returned by Get-View. Hosts names(IPs) and credentials are saved in a XMl file ( configExample.xml for this script).
         The script saves reports to disk and automatically displays the reports converted to HTML by invoking the default browser.
-        Reports are exported to Excel using Import-Excel Modules from https://github.com/dfinke/ImportExcel.
+        Reports are exported to Excel using Import-Excel Modules from https://github.com/dfinke/ImportExcel. 
         You can install this Module from PowerShell Gallery : https://www.powershellgallery.com/packages/ImportExcel/5.3.4
 
     .USAGE 
@@ -73,16 +73,16 @@ function vmProperties {
         #Datastores info
         $datastoresNames = $vm.Config.DataStoreUrl.Name
         #Check for multi-homed vms
-        $ips=""
-        foreach ($ip in $ipAdresses){
+        $ips = ""
+        foreach ($ip in $ipAdresses) {
             $ips += $ip + "`n"
         }
-        $macs=""
-        foreach($mac in $macAdresses){
+        $macs = ""
+        foreach ($mac in $macAdresses) {
             $macs += $mac + "`n"
         }
-        $datastores=""
-        foreach($datastore in $datastoresNames){
+        $datastores = ""
+        foreach ($datastore in $datastoresNames) {
             $datastores += $datastore + " "
         }
 
@@ -205,7 +205,7 @@ foreach ($ESX in $listOfESX) {
     $pass = $ESX.password.pass
 
     #Path to html report
-    $repPath = (Get-ChildItem  env:userprofile).value + "\desktop\{0}.htm" -f $hostIP
+    $htmlPath = (Get-ChildItem  env:userprofile).value + "\desktop\{0}.htm" -f $hostIP
     $excelPath = (Get-ChildItem  env:userprofile).value + "\desktop\{0}.xlsx" -f $hostIP
     
     #Report Title
@@ -237,16 +237,16 @@ foreach ($ESX in $listOfESX) {
         }
         elseif ($exportTo -eq "html") {
             #Iterate through the view object, write the set of vm properties to a PSObject and convert the whole lot to Excel workbook
-            (vmProperties -view $vmView) | Sort-Object -Property @{Expression = $sortBy; Descending = $desc} | ConvertTo-Html -Head $(header) -PreContent $title | Set-Content -Path $repPath -ErrorAction Stop
+            (vmProperties -view $vmView) | Sort-Object -Property @{Expression = $sortBy; Descending = $desc} | ConvertTo-Html -Head $(header) -PreContent $title | Set-Content -Path $htmlPath -ErrorAction Stop
         }
         else {
-            (vmProperties -view $vmView) | Sort-Object -Property @{Expression = $sortBy; Descending = $desc} | ConvertTo-Html -Head $(header) -PreContent $title | Set-Content -Path $repPath -ErrorAction Stop
-            (vmProperties -view $vmView) | Sort-Object -Property @{Expression = $sortBy; Descending = $desc} | ConvertTo-Html -Head $(header) -PreContent $title | Set-Content -Path $repPath -ErrorAction Stop
+            (vmProperties -view $vmView) | Sort-Object -Property @{Expression = $sortBy; Descending = $desc} | ConvertTo-Html -Head $(header) -PreContent $title | Set-Content -Path $htmlPath -ErrorAction Stop
+            (vmProperties -view $vmView) | Sort-Object -Property @{Expression = $sortBy; Descending = $desc} | ConvertTo-Html -Head $(header) -PreContent $title | Set-Content -Path $htmlPath -ErrorAction Stop
         }
         #Disconnect from vCenter or hostIP
         Disconnect-VIServer -Confirm:$False -Server $hostIP -ErrorAction Stop
         #Load report in default browser
-        Invoke-Expression "cmd.exe /C start $repPath"
+        Invoke-Expression "cmd.exe /C start $htmlPath"
 
     }
     Catch {
