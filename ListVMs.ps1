@@ -35,8 +35,8 @@
     ImportExcel Modules
 #> 
 # commandline parameters
-[CmdletBinding()]
-Param(
+[CmdletBinding()] 
+param(
     [Parameter(Mandatory = $false, Position = 1)]
     [string]$sortBy,
     [Parameter(Mandatory = $false, Position = 2)]

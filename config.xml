@@ -1,0 +1,40 @@
+<config>
+    <ESX>
+        <HostIP ip="172.17.10.120"/>
+        <User user ="root"/>
+        <password pass ="wl3KyBhxuwTYrdSSdkLN"/>
+    </ESX>
+    <ESX>
+        <HostIP ip="172.17.10.130"/>
+        <User user ="root"/>
+        <password pass ="50s46tstj8jrvMJHKgp3"/>
+    </ESX>
+    <ESX>
+        <HostIP ip="172.17.10.150"/>
+        <User user ="root"/>
+        <password pass ="0chy8cZdC76IMqj5a9Xp"/>
+    </ESX>
+    <ESX>
+        <HostIP ip="172.17.10.170"/>
+        <User user ="root"/>
+        <password pass ="Living@object2018"/>
+    </ESX>
+    <ESX>
+        <HostIP ip="172.17.10.180"/>
+        <User user ="root"/>
+        <password pass ="0YtpMDP943ttoNvxyNwC"/>
+    </ESX>
+    <ESX>
+        <HostIP ip="172.17.10.190"/>
+        <User user ="root"/>
+        <password pass ="zUrAKnSJ48dSun63SG7T"/>
+    </ESX>
+    <ESX>
+        <HostIP ip="172.17.10.220"/>
+        <User user ="root"/>
+        <password pass ="R8Wt47CleriUs2TWq8Je"/>
+    </ESX>
+
+
+
+</config>
