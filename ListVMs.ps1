@@ -40,7 +40,7 @@ param(
     [Parameter(Mandatory = $false, Position = 1)]
     [string]$sortBy,
     [Parameter(Mandatory = $false, Position = 2)]
-    [string]$exportTo
+    [string]$exportTo = 'excel'
 )
 
 # Load required Modules
@@ -240,7 +240,7 @@ foreach ($ESX in $listOfESX) {
             (vmProperties -view $vmView) | Sort-Object -Property @{Expression = $sortBy; Descending = $desc} | ConvertTo-Html -Head $(header) -PreContent $title | Set-Content -Path $htmlPath -ErrorAction Stop
         }
         else {
-            (vmProperties -view $vmView) | Sort-Object -Property @{Expression = $sortBy; Descending = $desc} | ConvertTo-Html -Head $(header) -PreContent $title | Set-Content -Path $htmlPath -ErrorAction Stop
+            (vmProperties -view $vmView) | Sort-Object -Property @{Expression = $sortBy; Descending = $desc} | Export-Excel -Path $excelPath
             (vmProperties -view $vmView) | Sort-Object -Property @{Expression = $sortBy; Descending = $desc} | ConvertTo-Html -Head $(header) -PreContent $title | Set-Content -Path $htmlPath -ErrorAction Stop
         }
         #Disconnect from vCenter or hostIP
